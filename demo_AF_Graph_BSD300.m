@@ -23,6 +23,7 @@ outputpath = 'results';
 fid = fopen(fullfile('Nsegs_bsd300_l.txt'),'r');
 [BSDS_INFO] = fscanf(fid,'%d %d \n',[2,para.Nimgs]);
 fclose(fid);
+para.Nimgs = 100;
 
 Neg_all = zeros(para.Nimgs,1);
 PRI_all = zeros(para.Nimgs,1);
@@ -30,10 +31,15 @@ VoI_all = zeros(para.Nimgs,1);
 GCE_all = zeros(para.Nimgs,1);
 BDE_all = zeros(para.Nimgs,1);
 
+test_ims_map = "C:\Study\runs\bsd\test\ims_map_test.txt";
+fid = fopen(test_ims_map);
+test_ims_map_data = cell2mat(textscan(fid,'%f %*s'));
+fclose(fid);
 %%
+BSDS_INFO = BSDS_INFO(:,ismember(BSDS_INFO(1,:),test_ims_map_data));
 for idxI = 1:para.Nimgs
     % read number of segments
-    tic; Nseg = BSDS_INFO(2,idxI);   
+    tic; Nseg = 3;%BSDS_INFO(2,idxI);   
     out_path= fullfile(outputpath,'BSDS300');
     if ~exist(out_path,'dir'), mkdir(out_path);  end
     
@@ -45,7 +51,12 @@ for idxI = 1:para.Nimgs
     end
     img = im2double(imread(img_loc)); [X,Y,~] = size(img);
     load_name = fullfile(load_file,[img_name '.mat']); load(load_name)
-    
+%     ind_ = 1:3;
+%     seg = seg(ind_);
+%     labels_img = labels_img(ind_);
+%     seg_vals = seg_vals(ind_);
+%     seg_edges = seg_edges(ind_);
+%     feat = feat(ind_); 
     %% Construct graph
     Np = X*Y;   Nsp = 0;
     for k = 1:length(seg)
@@ -116,9 +127,15 @@ for idxI = 1:para.Nimgs
     BDE_all(idxI) = out_vals.BDE;
 end
 %%
+PRI_all = PRI_all(1:100);
+VoI_all = VoI_all(1:100);
+GCE_all = GCE_all(1:100);
+BDE_all = BDE_all(1:100);
+
+
 fprintf('Mean: %14.6f, %9.6f, %9.6f, %9.6f \n', mean(PRI_all), mean(VoI_all), mean(GCE_all), mean(BDE_all));
 fid_out = fopen(fullfile(outputpath,'BSDS300','evaluation.txt'),'w');
-for idxI=1:para.Nimgs
+for idxI=1:100%para.Nimgs
     fprintf(fid_out,'%6d %9.6f, %9.6f, %9.6f, %9.6f \n', BSDS_INFO(1,idxI),...
         PRI_all(idxI), VoI_all(idxI), GCE_all(idxI), BDE_all(idxI));
 end

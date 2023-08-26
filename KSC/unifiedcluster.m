@@ -14,6 +14,7 @@ for i=1:200
     F=eig1(L, n, 0);
 
     parfor ij=1:n
+%     for ij=1:n    
         all = veccomp2(ij,n,F);
         all=all.*all;
         H=2*alpha*eye(n)+2*K2;

@@ -22,7 +22,7 @@ nWy = (nWy+nWy')/2;
 
 % computer eigenvectors
 [evec,eval] = eig(full(nWy)); % use eigs for large superpixel graphs  
-[~,idx] = sort(diag(eval),'descend');
+[s_eval,idx] = sort(diag(eval),'descend');
 Ncut_evec = D*evec(:,idx(1:Nseg));
 
 %%% compute the Ncut eigenvectors on the entire bipartite graph (transfer!)
