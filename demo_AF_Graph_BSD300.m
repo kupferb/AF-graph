@@ -16,14 +16,52 @@ para.alphak = 1e-5;
 para.betak = 1e-6;
 para.save = 0; % save results
 
+% read numbers of segments used in the paper 
+
+fid = fopen(fullfile('Nsegs.txt'),'r');
+Nimgs = 300; % number of images in BSDS300
+[BSDS_INFO] = fscanf(fid,'%d %d \n',[2,Nimgs]);
+fclose(fid);
+run_type = "test";
+if run_type == "test"
+    Nimgs = 100;
+    test_ims_map = "ims_map_test.txt";
+    fid = fopen(test_ims_map);
+    test_ims_map_data = cell2mat(textscan(fid,'%f %*s'));
+    fclose(fid);
+    %%
+    BSDS_INFO = BSDS_INFO(:,ismember(BSDS_INFO(1,:),test_ims_map_data));
+
+elseif run_type == "train"
+    Nimgs = 200;
+    train_ims_map = "ims_map_train.txt";
+    fid = fopen(train_ims_map);
+    test_ims_map_data = cell2mat(textscan(fid,'%f %*s'));
+    fclose(fid);
+    %%
+    BSDS_INFO = BSDS_INFO(:,ismember(BSDS_INFO(1,:),test_ims_map_data));
+
+else
+    Nimgs = 300;
+end
+
+Nimgs_inds = 1:Nimgs;
+Nimgs = length(Nimgs_inds);
+para.Nimgs = Nimgs;
+PRI_all = zeros(Nimgs,1);
+VoI_all = zeros(Nimgs,1);
+GCE_all = zeros(Nimgs,1);
+BDE_all = zeros(Nimgs,1);
+
+
 %% read image
 bsdsRoot='BSD';
 load_file='bsd_300_feat';
 outputpath = 'results';
-fid = fopen(fullfile('Nsegs_bsd300_l.txt'),'r');
-[BSDS_INFO] = fscanf(fid,'%d %d \n',[2,para.Nimgs]);
-fclose(fid);
-para.Nimgs = 100;
+% fid = fopen(fullfile('Nsegs_bsd300_l.txt'),'r');
+% [BSDS_INFO] = fscanf(fid,'%d %d \n',[2,para.Nimgs]);
+% fclose(fid);
+% para.Nimgs = 100;
 
 Neg_all = zeros(para.Nimgs,1);
 PRI_all = zeros(para.Nimgs,1);
@@ -37,9 +75,10 @@ test_ims_map_data = cell2mat(textscan(fid,'%f %*s'));
 fclose(fid);
 %%
 BSDS_INFO = BSDS_INFO(:,ismember(BSDS_INFO(1,:),test_ims_map_data));
-for idxI = 1:para.Nimgs
+for k_idxI = 1:Nimgs
     % read number of segments
-    tic; Nseg = 3;%BSDS_INFO(2,idxI);   
+    idxI = Nimgs_inds(k_idxI);
+    tic; Nseg = 4;%BSDS_INFO(2,idxI);   
     out_path= fullfile(outputpath,'BSDS300');
     if ~exist(out_path,'dir'), mkdir(out_path);  end
     
@@ -51,7 +90,7 @@ for idxI = 1:para.Nimgs
     end
     img = im2double(imread(img_loc)); [X,Y,~] = size(img);
     load_name = fullfile(load_file,[img_name '.mat']); load(load_name)
-%     ind_ = 1:3;
+%     ind_ = 4:5;
 %     seg = seg(ind_);
 %     labels_img = labels_img(ind_);
 %     seg_vals = seg_vals(ind_);
@@ -127,17 +166,12 @@ for idxI = 1:para.Nimgs
     BDE_all(idxI) = out_vals.BDE;
 end
 %%
-PRI_all = PRI_all(1:100);
-VoI_all = VoI_all(1:100);
-GCE_all = GCE_all(1:100);
-BDE_all = BDE_all(1:100);
-
 
 fprintf('Mean: %14.6f, %9.6f, %9.6f, %9.6f \n', mean(PRI_all), mean(VoI_all), mean(GCE_all), mean(BDE_all));
-fid_out = fopen(fullfile(outputpath,'BSDS300','evaluation.txt'),'w');
-for idxI=1:100%para.Nimgs
-    fprintf(fid_out,'%6d %9.6f, %9.6f, %9.6f, %9.6f \n', BSDS_INFO(1,idxI),...
-        PRI_all(idxI), VoI_all(idxI), GCE_all(idxI), BDE_all(idxI));
-end
-fprintf(fid_out,'Mean: %10.6f, %9.6f, %9.6f, %9.6f \n', mean(PRI_all), mean(VoI_all), mean(GCE_all), mean(BDE_all));
-fclose(fid_out);
+% fid_out = fopen(fullfile(outputpath,'BSDS300','evaluation.txt'),'w');
+% for idxI=1:para.Nimgs
+%     fprintf(fid_out,'%6d %9.6f, %9.6f, %9.6f, %9.6f \n', BSDS_INFO(1,idxI),...
+%         PRI_all(idxI), VoI_all(idxI), GCE_all(idxI), BDE_all(idxI));
+% end
+% fprintf(fid_out,'Mean: %10.6f, %9.6f, %9.6f, %9.6f \n', mean(PRI_all), mean(VoI_all), mean(GCE_all), mean(BDE_all));
+% fclose(fid_out);
